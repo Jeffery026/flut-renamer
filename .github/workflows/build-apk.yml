@@ -1,0 +1,77 @@
+name: Build Arabic APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g. v1.6.2-ar)'
+        required: false
+        default: 'v1.6.2-arabic'
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate l10n
+        run: flutter gen-l10n
+
+      - name: Build APK (release)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk/
+          mv app-arm64-v8a-release.apk  flut-renamer-arabic-arm64.apk   || true
+          mv app-armeabi-v7a-release.apk flut-renamer-arabic-arm32.apk  || true
+          mv app-x86_64-release.apk      flut-renamer-arabic-x86_64.apk || true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          name: "مُعيد التسمية — نسخة عربية ${{ github.event.inputs.release_tag }}"
+          body: |
+            ## نسخة عربية محسّنة من Flut Renamer
+
+            ### ما الجديد في هذه النسخة؟
+            - ✅ واجهة عربية كاملة مع دعم RTL
+            - ✅ إصلاح ٩ أخطاء في الترجمة الرسمية
+            - ✅ اسم التطبيق: **مُعيد التسمية**
+
+            ### تنزيل الملف المناسب لجهازك
+            | الملف | المعالج |
+            |-------|---------|
+            | `flut-renamer-arabic-arm64.apk` | أجهزة حديثة (2018+) ✅ الأغلب |
+            | `flut-renamer-arabic-arm32.apk` | أجهزة قديمة |
+            | `flut-renamer-arabic-x86_64.apk` | محاكيات |
+
+            > إذا لم تعرف نوع معالجك، نزّل **arm64** فهو الأشيع.
+          files: |
+            build/app/outputs/flutter-apk/flut-renamer-arabic-arm64.apk
+            build/app/outputs/flutter-apk/flut-renamer-arabic-arm32.apk
+            build/app/outputs/flutter-apk/flut-renamer-arabic-x86_64.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
