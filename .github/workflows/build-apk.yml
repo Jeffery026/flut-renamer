@@ -33,9 +33,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Generate l10n
-        run: flutter gen-l10n
-
       - name: Build APK (release)
         run: flutter build apk --release --split-per-abi
 
