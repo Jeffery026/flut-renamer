@@ -8,6 +8,9 @@ on:
         required: false
         default: 'v1.6.2-arabic'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build APK
