@@ -36,15 +36,20 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK (release)
+      - name: Fix libdartjni build ID
+        run: |
+          find ~/.pub-cache -name "CMakeLists.txt" -path "*/jni-*/*" | xargs -r sed -i -e 's/-Wl,/-Wl,--build-id=none,/' || true
+
+      - name: Build APK (debug)
         run: flutter build apk --debug --split-per-abi
 
       - name: Rename APKs
         run: |
           cd build/app/outputs/flutter-apk/
-          mv flut-renamer-arabic-arm64.apk  flut-renamer-arabic-arm64.apk   || true
-          mv flut-renamer-arabic-arm32.apk flut-renamer-arabic-arm32.apk  || true
-          mv flut-renamer-arabic-x86_64.apk      flut-renamer-arabic-x86_64.apk || true
+          mv app-arm64-v8a-debug.apk   flut-renamer-arabic-arm64.apk  || true
+          mv app-armeabi-v7a-debug.apk flut-renamer-arabic-arm32.apk  || true
+          mv app-x86_64-debug.apk      flut-renamer-arabic-x86_64.apk || true
+          ls -lh *.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
